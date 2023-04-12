@@ -1,128 +1,85 @@
 import copy
 import os
-import sys
+import time
 from collections import defaultdict
 from multiprocessing.connection import Client
 
-from opendbc.can.parser import CANParser
-from opendbc.can.packer import CANPacker
 from selfdrive.boardd.boardd_api_impl import can_list_to_can_capnp
 
-from selfdrive.boardd.boardd import can_capnp_to_can_list
-
-import time
-from datetime import datetime
-
 from cereal import messaging
-from selfdrive.car.car_helpers import get_one_can
-
-# print('Trying to get a can socket')
-# can_sock = messaging.sub_sock('can')
-# print('Created can_sock')
-#
-# while True:
-#     can_msg = get_one_can(can_sock)
-#     print(can_msg)
-#     continue
-
-# class CanBridgeClient:
+from opendbc.can.parser import CANParser
+from selfdrive.boardd.boardd import can_capnp_to_can_list
 from selfdrive.dimke import settrace
 
 
-try:
-    if os.environ['DEBUG_OPENPILOT_BRIDGE'] == '1':
-        settrace()
-except KeyError:
-    pass
-
-
-# noinspection PyShadowingNames
 def update_parser(parser, msgs):
     bts = can_list_to_can_capnp(msgs)
     parser.update_string(bts)
 
 
-dbc_file = "honda_civic_touring_2016_can_generated"
-
-signals = [
-    ("XMISSION_SPEED", "ENGINE_DATA"),
-    ("STEER_ANGLE", "STEERING_SENSORS"),
-    ("WHEEL_SPEED_FL", "WHEEL_SPEEDS"),
-    ("WHEEL_SPEED_FR", "WHEEL_SPEEDS"),
-    ("WHEEL_SPEED_RL", "WHEEL_SPEEDS"),
-    ("WHEEL_SPEED_RR", "WHEEL_SPEEDS")
-]
-checks = [("ENGINE_DATA", 100),
-          ("STEERING_SENSORS", 100),
-          ("WHEEL_SPEEDS", 50)]
-
-parser = CANParser(dbc_file, copy.deepcopy(signals), copy.deepcopy(checks), 0)
-packer = CANPacker(dbc_file)
-
-# t = datetime.today()
-# future = datetime(t.year, t.month, t.day, 11, 24, 0)
-# time.sleep((future-t).total_seconds())
-
-# update_parser(parser,
-#               [packer.make_can_msg("STEERING_SENSORS", 0, {"STEER_ANGLE": 1}),
-#                packer.make_can_msg("STEERING_SENSORS", 0, {"STEER_ANGLE": 2})])
-
-# update_parser(parser,
-#               [packer.make_can_msg("STEERING_SENSORS", 0, {"STEER_ANGLE": 3}),
-#                packer.make_can_msg("STEERING_SENSORS", 0, {"STEER_ANGLE": 4})])
-
-# update_parser(parser, [packer.make_can_msg("STANDSTILL", 0, {"WHEELS_MOVING": 1})])
-
-print('Connecting to localhost:7777...')
-while True:
+def main():
     try:
-        send_conn = Client(('localhost', 7777))
-        break
-    except ConnectionRefusedError:
-        time.sleep(0.1)
-print('Connected to localhost:7777!')
+        if os.environ['DEBUG_OPENPILOT_BRIDGE'] == '1':
+            settrace()
+    except KeyError:
+        pass
 
-# data_dict = {
-#     'logMonoTimestamp': parser.ts_nanos['STEERING_SENSORS']['STEER_ANGLE'],
-#     'STEER_ANGLE': 4,
-# }
-#
+    dbc_file = "honda_civic_touring_2016_can_generated"
 
-msg_name_to_signal_names = defaultdict(list)
-for s in signals:
-    msg_name_to_signal_names[s[1]].append(s[0])
+    signals = [
+        ("XMISSION_SPEED", "ENGINE_DATA"),
+        ("STEER_ANGLE", "STEERING_SENSORS"),
+        ("WHEEL_SPEED_FL", "WHEEL_SPEEDS"),
+        ("WHEEL_SPEED_FR", "WHEEL_SPEEDS"),
+        ("WHEEL_SPEED_RL", "WHEEL_SPEEDS"),
+        ("WHEEL_SPEED_RR", "WHEEL_SPEEDS")
+    ]
+    checks = [("ENGINE_DATA", 100),
+              ("STEERING_SENSORS", 100),
+              ("WHEEL_SPEEDS", 50)]
 
-msg_name_to_last_tstamp = {c[0]: None for c in checks}
+    parser = CANParser(dbc_file, copy.deepcopy(signals), copy.deepcopy(checks), 0)
 
-sm = messaging.SubMaster(['can'])
-while 1:
-    sm.update()
-    update_parser(parser, can_capnp_to_can_list(sm['can']))
+    print('Connecting to localhost:7777...')
+    while True:
+        try:
+            send_conn = Client(('localhost', 7777))
+            break
+        except ConnectionRefusedError:
+            time.sleep(0.1)
+    print('Connected to localhost:7777!')
 
-    for msg_name in msg_name_to_last_tstamp:
-        parsed_msg_tstamp = parser.ts_nanos[msg_name]['CHECKSUM']
+    msg_name_to_signal_names = defaultdict(list)
+    for s in signals:
+        msg_name_to_signal_names[s[1]].append(s[0])
 
-        for key in parser.ts_nanos[msg_name]:
-            assert parser.ts_nanos[msg_name][key] == parsed_msg_tstamp
+    msg_name_to_last_tstamp = {c[0]: None for c in checks}
 
-        if msg_name_to_last_tstamp[msg_name] != parsed_msg_tstamp:
-            msg_name_to_last_tstamp[msg_name] = parsed_msg_tstamp
+    sm = messaging.SubMaster(['can'])
+    while 1:
+        sm.update()
+        update_parser(parser, can_capnp_to_can_list(sm['can']))
 
-            msg = {
-                'msg_name': msg_name,
-                'log_mono_timestamp': parsed_msg_tstamp,
-                'signals': {
-                  signal_name: parser.vl[msg_name][signal_name] for signal_name in msg_name_to_signal_names[msg_name]
+        for msg_name in msg_name_to_last_tstamp:
+            parsed_msg_tstamp = parser.ts_nanos[msg_name]['CHECKSUM']
+
+            for key in parser.ts_nanos[msg_name]:
+                assert parser.ts_nanos[msg_name][key] == parsed_msg_tstamp
+
+            if msg_name_to_last_tstamp[msg_name] != parsed_msg_tstamp:
+                msg_name_to_last_tstamp[msg_name] = parsed_msg_tstamp
+
+                msg = {
+                    'msg_name': msg_name,
+                    'log_mono_timestamp': parsed_msg_tstamp,
+                    'signals': {
+                        signal_name:
+                            parser.vl[msg_name][signal_name] for signal_name in msg_name_to_signal_names[msg_name]
+                    }
                 }
-            }
 
-            send_conn.send(msg)
+                send_conn.send(msg)
 
-# print('Trying to get a can socket')
-# can_sock = messaging.sub_sock('can')
-# print('Created can_sock')
-#
-# while True:
-#     can_msg = get_one_can(can_sock)
-#     print(can_msg)
-#     continue
+
+if __name__ == '__main__':
+    main()
