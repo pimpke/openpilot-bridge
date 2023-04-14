@@ -9,7 +9,7 @@ from selfdrive.boardd.boardd_api_impl import can_list_to_can_capnp
 from cereal import messaging
 from opendbc.can.parser import CANParser
 from selfdrive.boardd.boardd import can_capnp_to_can_list
-from selfdrive.dimke import settrace
+from selfdrive.dbg import settrace
 
 
 def update_parser(parser, msgs):
