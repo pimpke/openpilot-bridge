@@ -1,4 +1,10 @@
 #!/bin/bash
+if [ "${SHOULD_BUILD_OPENPILOT}" == 1 ]; then
+  cd /openpilot
+  scons -u -j$(nproc)
+  exit 0
+fi
+
 tmux new -d -s default
 if [[ "${SHOULD_RUN_OPENPILOT_SIM}" == "1" ]]; then
   tmux send-keys "cd /openpilot/tools/sim && ./launch_openpilot.sh" ENTER
