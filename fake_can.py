@@ -1,3 +1,4 @@
+import os
 import threading
 import time
 
@@ -7,6 +8,7 @@ from opendbc.can.packer import CANPacker
 from selfdrive.boardd.boardd_api_impl import can_list_to_can_capnp
 
 from selfdrive.car import crc8_pedal
+from selfdrive.dbg import settrace
 
 
 def can_function(pm, packer, idx):
@@ -89,5 +91,15 @@ def bridge_keep_alive():
             print("Restarting bridge...")
 
 
-if __name__ == "__main__":
+def main():
+    try:
+        if os.environ['DEBUG_FAKE_CAN'] == '1':
+            settrace()
+    except KeyError:
+        pass
+
     bridge_keep_alive()
+
+
+if __name__ == "__main__":
+    main()
