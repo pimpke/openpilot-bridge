@@ -24,8 +24,8 @@ def can_function(pm, packer, idx):
     speed = speed * 3.6  # convert m/s to kph
     # msg.append(packer.make_can_msg("ENGINE_DATA", 0, {"XMISSION_SPEED": speed}, idx))
     msg.append(packer.make_can_msg("WHEEL_SPEED", 0, {
-        "WHEEL_SPEED_F": speed,
-        "WHEEL_SPEED_B": speed,
+        "WHEELSPEED_F": speed,
+        "WHEELSPEED_B": speed,
     }, -1))
 
     # msg.append(packer.make_can_msg("SCM_BUTTONS", 0, {"CRUISE_BUTTONS": cruise_button}, idx))
