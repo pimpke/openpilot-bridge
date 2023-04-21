@@ -28,8 +28,8 @@ def main():
 
     signals = [
         ("STEER_ANGLE", "STEERING_ANGLE_SENSOR"),
-        ("WHEEL_SPEED_F", "WHEEL_SPEED"),
-        ("WHEEL_SPEED_B", "WHEEL_SPEED"),
+        ("WHEELSPEED_F", "WHEEL_SPEED"),
+        ("WHEELSPEED_B", "WHEEL_SPEED"),
         ("BRAKE_PRESSURE", "BRAKE"),
         ("BRAKE_ENGAGED", "BRAKE"),
     ]
@@ -54,7 +54,8 @@ def main():
     for s in signals:
         msg_name_to_signal_names[s[1]].append(s[0])
 
-    msg_name_to_last_tstamp = {c[0]: None for c in checks}
+    msg_names = set([s[1] for s in signals])
+    msg_name_to_last_tstamp = {c: None for c in msg_names}
 
     sm = messaging.SubMaster(['can'])
     while 1:
