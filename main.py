@@ -63,7 +63,7 @@ def main():
         update_parser(parser, can_capnp_to_can_list(sm['can']))
 
         for msg_name in msg_name_to_last_tstamp:
-            parsed_msg_tstamp = parser.ts_nanos[msg_name]['CHECKSUM']
+            parsed_msg_tstamp = next(iter(parser.ts_nanos[msg_name].values()))
 
             for key in parser.ts_nanos[msg_name]:
                 assert parser.ts_nanos[msg_name][key] == parsed_msg_tstamp
