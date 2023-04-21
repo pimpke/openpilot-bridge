@@ -24,21 +24,22 @@ def main():
     except KeyError:
         pass
 
-    dbc_file = "honda_civic_touring_2016_can_generated"
+    dbc_file = "perodua_general_pt"
 
     signals = [
-        ("XMISSION_SPEED", "ENGINE_DATA"),
-        ("STEER_ANGLE", "STEERING_SENSORS"),
-        ("WHEEL_SPEED_FL", "WHEEL_SPEEDS"),
-        ("WHEEL_SPEED_FR", "WHEEL_SPEEDS"),
-        ("WHEEL_SPEED_RL", "WHEEL_SPEEDS"),
-        ("WHEEL_SPEED_RR", "WHEEL_SPEEDS")
+        ("STEER_ANGLE", "STEERING_ANGLE_SENSOR"),
+        ("WHEEL_SPEED_F", "WHEEL_SPEED"),
+        ("WHEEL_SPEED_B", "WHEEL_SPEED"),
+        ("BRAKE_PRESSURE", "BRAKE"),
+        ("BRAKE_ENGAGED", "BRAKE"),
     ]
-    checks = [("ENGINE_DATA", 100),
-              ("STEERING_SENSORS", 100),
-              ("WHEEL_SPEEDS", 50)]
+    # checks = [("ENGINE_DATA", 100),
+    #           ("STEERING_SENSORS", 100),
+    #           ("WHEEL_SPEED", 50)]
+    checks = []
 
-    parser = CANParser(dbc_file, copy.deepcopy(signals), copy.deepcopy(checks), 0)
+    # parser = CANParser(dbc_file, signals, checks, 0, enforce_checks=False)
+    parser = CANParser(dbc_file, copy.deepcopy(signals), copy.deepcopy(checks), 0, enforce_checks=False)
 
     print('Connecting to localhost:7777...')
     while True:
