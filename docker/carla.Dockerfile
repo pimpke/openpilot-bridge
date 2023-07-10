@@ -16,8 +16,12 @@ RUN apt-get update && apt-get -y install sudo
 RUN apt-get install -y libvulkan1 vulkan-utils
 RUN apt-get install -y xserver-xorg mesa-utils
 RUN apt-get install -y mesa-vulkan-drivers 
-RUN apt-get install -y tmux 
+RUN apt-get install -y tmux
+RUN apt-get update --fix-missing
+RUN apt-get install -y python3-pip
 
 USER carla
+
+RUN python3 -m pip install psutil
 
 CMD /bin/bash

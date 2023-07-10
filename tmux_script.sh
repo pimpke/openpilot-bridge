@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export DEBUG=1
+
 if [ "${SHOULD_BUILD_OPENPILOT}" == 1 ]; then
   cd /openpilot || exit
 
@@ -7,6 +9,8 @@ if [ "${SHOULD_BUILD_OPENPILOT}" == 1 ]; then
     scons --clean
   fi
 
+  rm -rf /tmp/scons_cache
+  mkdir /tmp/scons_cache
   scons -u "-j$(nproc)"
   exit 0
 fi

@@ -45,8 +45,11 @@ def create_modelv2_msg(control_dict):
 def main(port=6010):
     pm = messaging.PubMaster(['modelV2'])
 
-    import pydevd_pycharm
-    pydevd_pycharm.settrace('localhost', port=1237, stdoutToServer=True, stderrToServer=True, suspend=False)
+    try:
+        import pydevd_pycharm
+        pydevd_pycharm.settrace('localhost', port=1237, stdoutToServer=True, stderrToServer=True, suspend=False)
+    except ConnectionRefusedError:
+        print('[Warning] Debugger on port 1237 not found. Continuing...')
 
     print(f'Listening for connections on port {port}...')
     listener = Listener(('localhost', port))
